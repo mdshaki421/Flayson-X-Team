@@ -17,10 +17,7 @@ module.exports = {
     for (const [name, cmd] of allCommands) {
       const cat = cmd.config.category || "others";
       if (!categories[cat]) categories[cat] = [];
-      categories[cat].push({
-        name: cmd.config.name,
-        desc: cmd.config.shortDescription || ""
-      });
+      categories[cat].push(cmd.config.name);
     }
 
     if (args[0]) {
@@ -41,33 +38,20 @@ module.exports = {
       );
     }
 
-    const emojiMap = {
-      "system": "🛠️",
-      "AI-IMAGE": "🏜️",
-      "info": "ℹ️",
-      "fun": "🎉",
-      "media": "🎬",
-      "economy": "💰",
-      "games": "🎮",
-      "tools": "🧰",
-      "others": "📁"
-    };
+    let msg = `╭─────────⦿\n│  🌷 Flayson X Team  ⛩️\n│  ❝ Born from ashes, crowned in petals ❞\n│  ⚡ Powered by: Flayson X nexxo \n│  📍 Main GC: m.me/joinchat\n╰────────────⦿\n\n`;
 
-    let msg = "📜 Help Menu\nHere are the available commands:\n\n";
+    const totalCmd = [];
 
     for (const cat of Object.keys(categories).sort()) {
-      msg += `${emojiMap[cat] || "📁"} ${capitalize(cat)}:\n`;
-      const cmds = categories[cat]
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map(c => `• ${c.name}${c.desc}`);
-      msg += cmds.join("\n") + "\n\n";
+      const cmds = categories[cat].sort((a, b) => a.localeCompare(b));
+      totalCmd.push(...cmds);
+      msg += `╭──⦿【 ${cat.toUpperCase()} 】\n`;
+      msg += cmds.map(cmd => `✧ ${cmd}`).join(" ") + "\n";
+      msg += `╰────────⦿\n\n`;
     }
 
-    msg += `💡 Tip: Type "${prefix}help [command]" to view detailed info.`;
+    msg += `╭─────────────⦿\n│ 🧠 Total Commands: ${totalCmd.length}+\n│ ⚠️ Others Coming Soon…\n╰──────────────⦿`;
+
     return message.reply(msg);
   }
 };
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
