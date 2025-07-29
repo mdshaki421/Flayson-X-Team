@@ -1,65 +1,62 @@
 module.exports = {
-	config: {
-		name: "onlyadminbox",
-		aliases: ["onlyadbox", "adboxonly", "adminboxonly"],
-		version: "1.3",
-		author: "NTKhang",
-		countDown: 5,
-		role: 1,
-		description: {
-			vi: "bật/tắt chế độ chỉ quản trị của viên nhóm mới có thể sử dụng bot",
-			en: "turn on/off only admin box can use bot"
-		},
-		category: "box chat",
-		guide: {
-			vi: "   {pn} [on | off]: bật/tắt chế độ chỉ quản trị viên nhóm mới có thể sử dụng bot"
-				+ "\n   {pn} noti [on | off]: bật/tắt thông báo khi người dùng không phải là quản trị viên nhóm sử dụng bot",
-			en: "   {pn} [on | off]: turn on/off the mode only admin of group can use bot"
-				+ "\n   {pn} noti [on | off]: turn on/off the notification when user is not admin of group use bot"
-		}
-	},
+  config: {
+    name: "onlyadminbox",
+    aliases: ["onlyadbox", "adboxonly", "adminboxonly"],
+    version: "1.0",
+    author: "FlaysonX",
+    countDown: 5,
+    role: 0, // বটের রোল প্রয়োজনে বদলাতে পারো
+    shortDescription: "Restrict bot use to group admins and bot admins only",
+    longDescription: "If enabled, only group admins and bot admins can use the bot in the group",
+    category: "box chat",
+    guide: "{pn} [on|off]"
+  },
 
-	langs: {
-		vi: {
-			turnedOn: "Đã bật chế độ chỉ quản trị viên nhóm mới có thể sử dụng bot",
-			turnedOff: "Đã tắt chế độ chỉ quản trị viên nhóm mới có thể sử dụng bot",
-			turnedOnNoti: "Đã bật thông báo khi người dùng không phải là quản trị viên nhóm sử dụng bot",
-			turnedOffNoti: "Đã tắt thông báo khi người dùng không phải là quản trị viên nhóm sử dụng bot",
-			syntaxError: "Sai cú pháp, chỉ có thể dùng {pn} on hoặc {pn} off"
-		},
-		en: {
-			turnedOn: "Turned on the mode only admin of group can use bot",
-			turnedOff: "Turned off the mode only admin of group can use bot",
-			turnedOnNoti: "Turned on the notification when user is not admin of group use bot",
-			turnedOffNoti: "Turned off the notification when user is not admin of group use bot",
-			syntaxError: "Syntax error, only use {pn} on or {pn} off"
-		}
-	},
+  onStart: async function ({ args, message, event, api, threadsData, global }) {
+    const threadID = event.threadID;
+    const senderID = event.senderID;
 
-	onStart: async function ({ args, message, event, threadsData, getLang }) {
-		let isSetNoti = false;
-		let value;
-		let keySetData = "data.onlyAdminBox";
-		let indexGetVal = 0;
+    // মোড সেট করার জন্য আর্গুমেন্ট চেক
+    if (!args[0] || !["on", "off"].includes(args[0].toLowerCase())) {
+      return message.reply(`Usage:\n${this.config.guide.replace("{pn}", global.prefix)}`);
+    }
 
-		if (args[0] == "noti") {
-			isSetNoti = true;
-			indexGetVal = 1;
-			keySetData = "data.hideNotiMessageOnlyAdminBox";
-		}
+    const mode = args[0].toLowerCase();
+    const enabled = mode === "on";
 
-		if (args[indexGetVal] == "on")
-			value = true;
-		else if (args[indexGetVal] == "off")
-			value = false;
-		else
-			return message.reply(getLang("syntaxError"));
+    // থ্রেড ডাটায় সেট করা
+    await threadsData.set(threadID, enabled, "data.onlyAdminBox");
 
-		await threadsData.set(event.threadID, isSetNoti ? !value : value, keySetData);
+    return message.reply(`✅ Only Admin Box mode is now ${enabled ? "ENABLED" : "DISABLED"}`);
+  },
 
-		if (isSetNoti)
-			return message.reply(value ? getLang("turnedOnNoti") : getLang("turnedOffNoti"));
-		else
-			return message.reply(value ? getLang("turnedOn") : getLang("turnedOff"));
-	}
+  // এই ফাংশন বটের কমান্ড এক্সিকিউশনের আগে কল করতে হবে (বটের মেইন লজিক অনুযায়ী)
+  onCheck: async function ({ event, api, global, threadsData }) {
+    const threadID = event.threadID;
+    const senderID = event.senderID;
+
+    // মোড চেক করো
+    const onlyAdminBox = await threadsData.get(threadID, "data.onlyAdminBox") || false;
+    if (!onlyAdminBox) return true; // মোড অফ থাকলে সবাই ইউজ করতে পারবে
+
+    // গ্রুপ অ্যাডমিনদের লিস্ট পাওয়া
+    const threadInfo = await api.getThreadInfo(threadID);
+    const adminIDs = threadInfo.adminIDs ? threadInfo.adminIDs.map(a => a.id) : [];
+
+    // বট অ্যাডমিন লিস্ট
+    const botAdmins = global.GoatBot.botAdmins || [];
+
+    // যদি sender গ্রুপ অ্যাডমিন বা বট অ্যাডমিন না হয়, ইউজার রিস্ট্রিক্ট করবে
+    if (!adminIDs.includes(senderID) && !botAdmins.includes(senderID)) {
+      // চাইলে এখানে মেসেজ পাঠাতে পারো
+      api.sendMessage(
+        "❌ Sorry, only group admins or bot admins can use the bot now.",
+        threadID,
+        event.messageID
+      );
+      return false; // এক্সিকিউশন বন্ধ করবে
+    }
+
+    return true; // পারমিশন আছে
+  }
 };
