@@ -12,7 +12,7 @@
   "antiInbox": false,
   "language": "en",
   "notesLanguage": "change to your language with ISO 639-1 code, available languages: vi (Vietnamese), en (English)",
-  "nickNameBot": "𝒁𝒆𝒓𝒐𝟎𝟐 | 𝐁𝐚𝐤𝐞𝐝 𝐁𝐨𝐭🍓",
+  "nickNameBot": "༼꧁𝐅𝐞𝐫𝐧߷𝐀𝐈꧂༽ 🌊🖤🪽",
   "prefix": "*",
   "adminOnly": {
     "enable": false,
@@ -20,10 +20,7 @@
   },
   "adminBot": [
     "100012836230087",
-    "61573929522654",
-    "100094891361585",
-    "61575912837381",
-    "61564055373545"
+    "61573929522654"
   ],
   "whiteListMode": {
     "enable": false,
